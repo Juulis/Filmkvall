@@ -1,0 +1,9 @@
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+/src/moviesociety-88142-firebase-adminsdk-0cfn2-97d13ab429.json
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
