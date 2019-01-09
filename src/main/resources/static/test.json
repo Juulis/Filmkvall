@@ -1,0 +1,173 @@
+[
+  {
+    "dannyp,examec@gmail,com": {
+      "events": [
+        {
+          "endDate": "2019-01-04",
+          "endTime": "20:00",
+          "startDate": "2019-01-04",
+          "startTime": "18:00"
+        },
+        {
+          "endDate": "2019-01-05",
+          "endTime": "21:00",
+          "startDate": "2019-01-05",
+          "startTime": "20:00"
+        },
+        {
+          "endDate": "2019-01-10",
+          "endTime": "20:00",
+          "startDate": "2019-01-10",
+          "startTime": "19:00"
+        },
+        {
+          "endDate": "2019-01-12",
+          "endTime": "21:30",
+          "startDate": "2019-01-12",
+          "startTime": "18:30"
+        },
+        {
+          "endDate": "2019-01-17",
+          "endTime": "20:15",
+          "startDate": "2019-01-17",
+          "startTime": "14:30"
+        }
+      ],
+      "mail": "dannyp.examec@gmail.com",
+      "name": "Danny Persson",
+      "pw": "x2nWEvJ8UgLIS6DmP2if5y/Q4AHhkgqtXjyd6hC/6U+JW1SytPBliGf260+8q6QIW+8o/0STur864RMFpzyfQA=="
+    },
+    "dannypersson87@gmail,com": {
+      "events": [
+        {
+          "endDate": "2019-01-06",
+          "endTime": "09:00",
+          "startDate": "2018-12-31",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-01-10",
+          "endTime": "09:00",
+          "startDate": "2019-01-10",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-01-20",
+          "endTime": "09:00",
+          "startDate": "2019-01-14",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-01-24",
+          "endTime": "09:00",
+          "startDate": "2019-01-24",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-02-03",
+          "endTime": "09:00",
+          "startDate": "2019-01-28",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-02-07",
+          "endTime": "09:00",
+          "startDate": "2019-02-07",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-02-17",
+          "endTime": "09:00",
+          "startDate": "2019-02-11",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-02-21",
+          "endTime": "09:00",
+          "startDate": "2019-02-21",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-03-03",
+          "endTime": "09:00",
+          "startDate": "2019-02-25",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-03-07",
+          "endTime": "09:00",
+          "startDate": "2019-03-07",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-03-17",
+          "endTime": "09:00",
+          "startDate": "2019-03-11",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-03-21",
+          "endTime": "09:00",
+          "startDate": "2019-03-21",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-03-31",
+          "endTime": "10:00",
+          "startDate": "2019-03-25",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-04-04",
+          "endTime": "09:00",
+          "startDate": "2019-04-04",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-04-14",
+          "endTime": "09:00",
+          "startDate": "2019-04-08",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-04-18",
+          "endTime": "09:00",
+          "startDate": "2019-04-18",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-04-28",
+          "endTime": "09:00",
+          "startDate": "2019-04-22",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-05-02",
+          "endTime": "09:00",
+          "startDate": "2019-05-02",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-05-12",
+          "endTime": "09:00",
+          "startDate": "2019-05-06",
+          "startTime": "08:00"
+        },
+        {
+          "endDate": "2019-05-16",
+          "endTime": "09:00",
+          "startDate": "2019-05-16",
+          "startTime": "08:00"
+        }
+      ],
+      "mail": "dannypersson87@gmail.com",
+      "name": "Danny Persson",
+      "pw": "x2nWEvJ8UgLIS6DmP2if5y/Q4AHhkgqtXjyd6hC/6U+JW1SytPBliGf260+8q6QIW+8o/0STur864RMFpzyfQA=="
+    },
+    "schooltestjava@gmail,com": {
+      "mail": "schooltestjava@gmail.com",
+      "name": "Test Application",
+      "pw": "x2nWEvJ8UgLIS6DmP2if5y/Q4AHhkgqtXjyd6hC/6U+JW1SytPBliGf260+8q6QIW+8o/0STur864RMFpzyfQA=="
+    }
+  }
+]
