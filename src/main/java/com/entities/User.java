@@ -1,18 +1,16 @@
 package com.entities;
 
-
-import com.google.api.services.calendar.Calendar;
-
 import javax.persistence.Entity;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
 public class User {
-    private String name;
+    private String name = "default name";
     private List<Integer> groups;
     private String pw;
-    private String mail;
-    private List<Event> events;
+    private String mail = "noMail";
+    private List<Event> events = Collections.emptyList();
 
     public User() {
     }
@@ -33,8 +31,7 @@ public class User {
 
     @Override
     public String toString() {
-        String toString = String.format("%s,%s\n%s",name,mail,events.toString());
-        return toString;
+        return String.format("%s,%s\n%s", name, mail, events.toString());
     }
 
     public String getName() {

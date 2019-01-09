@@ -2,24 +2,19 @@ package com.controller;
 
 import com.app.DatabaseController;
 import com.entities.Event;
-import com.entities.UserList;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.Json;
-import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.Data;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.model.EventAttendee;
+import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
 import com.entities.User;
-import com.google.gson.Gson;
-import org.apache.tomcat.util.json.JSONParser;
-import org.json.JSONObject;
 import org.springframework.web.bind.annotation.*;
 
 import javax.crypto.SecretKeyFactory;
@@ -29,10 +24,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
+
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
 public class UserController {
@@ -230,7 +229,7 @@ public class UserController {
                     end = event.getStart().getDate();
                 }
 //                System.out.printf("%s (%s) -> (%s)\n", event.getSummary(), start, end);
-                eventsFromUser.add(new Event(start+","+end));
+                eventsFromUser.add(new Event(start + "," + end));
             }
         }
 
@@ -241,36 +240,109 @@ public class UserController {
         return "OK";
     }
 
-    @GetMapping("/getusers")
-    public String getAvailableHours() {
-        //get all events from all users and put it in a string well formatted
-        //YYYY-MM-DD-HH
-        //then find available 3 hour windows between 18-22
-
-
-
+    @GetMapping("/getdates")
+    public List<String> getAvailableHours() {
         List<User> ul = DatabaseController.getInstance().fetchListOfUsers();
+        List<String> dates = makeDates();
+        List<String> busyDates = new ArrayList<>();
 
-
-        System.out.println(ul.size());
-
-        System.out.println(DatabaseController.getInstance().fetchEvents());
-        LocalDate today = LocalDate.now();
-
-
-        String[] availableDates = new String[14];
-
-        for (int i = 0; i < availableDates.length; i++) {
-            availableDates[i]=today.plusDays(i).toString();
-            System.out.println(availableDates[i].toString());
+        //get all busy dates from all users
+        for (User u : ul) {
+            for (Event e : u.getEvents()) {
+                if (isViableTime(e)) {
+                    busyDates.add(e.getStartDate());
+                }
+            }
         }
 
-
-
-        return null;
-
+        //make a list of available dates
+        for (int i = 0; i < dates.size(); i++) {
+            for (String bd : busyDates) {
+                if (bd.equals(dates.get(i))) {
+                    dates.remove(i);
+                }
+            }
+        }
+        return dates;
 
 
     }
 
+    private boolean isViableTime(Event e) {
+        LocalDate today = LocalDate.now();
+
+        LocalDate eDate = LocalDate.parse(e.getStartDate());
+        int eStartTime = Integer.parseInt(e.getStartTime().substring(0, 2));
+        int eEndTime = Integer.parseInt(e.getEndTime().substring(0, 2));
+
+        boolean isEvening = eStartTime >= 18 && eStartTime <= 21 || eEndTime >= 19;
+        boolean thisOrNextMonth = today.getMonthValue() == eDate.getMonthValue() || today.plusMonths(1).getMonthValue() == eDate.getMonthValue();
+        return today.getYear() == eDate.getYear() && thisOrNextMonth && isEvening;
+
+    }
+
+    private List<String> makeDates() {
+        List<String> dates = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        LocalDate todayplus = LocalDate.now().plusMonths(2);
+        while (today.getMonthValue() < todayplus.getMonthValue()) {
+            dates.add(today.toString());
+            today = today.plusDays(1);
+        }
+        return dates;
+    }
+
+    @RequestMapping(value="/bookdate", method=POST)
+    public String bookDate(@RequestBody String bookinginfo){
+        // Refer to the Java quickstart on how to setup the environment:
+// https://developers.google.com/calendar/quickstart/java
+// Change the scope to CalendarScopes.CALENDAR and delete any stored
+// credentials.
+
+        com.google.api.services.calendar.model.Event event = new com.google.api.services.calendar.model.Event()
+                .setSummary("Google I/O 2015")
+                .setLocation("800 Howard St., San Francisco, CA 94103")
+                .setDescription("A chance to hear more about Google's developer products.");
+
+        DateTime startDateTime = new DateTime("2015-05-28T09:00:00-07:00");
+        EventDateTime start = new EventDateTime()
+                .setDateTime(startDateTime)
+                .setTimeZone("America/Los_Angeles");
+        event.setStart(start);
+
+        DateTime endDateTime = new DateTime("2015-05-28T17:00:00-07:00");
+        EventDateTime end = new EventDateTime()
+                .setDateTime(endDateTime)
+                .setTimeZone("America/Los_Angeles");
+        event.setEnd(end);
+
+        String[] recurrence = new String[] {"RRULE:FREQ=DAILY;COUNT=2"};
+        event.setRecurrence(Arrays.asList(recurrence));
+
+        EventAttendee[] attendees = new EventAttendee[] {
+                new EventAttendee().setEmail("lpage@example.com"),
+                new EventAttendee().setEmail("sbrin@example.com"),
+        };
+        event.setAttendees(Arrays.asList(attendees));
+
+        EventReminder[] reminderOverrides = new EventReminder[] {
+                new EventReminder().setMethod("email").setMinutes(24 * 60),
+                new EventReminder().setMethod("popup").setMinutes(10),
+        };
+        com.google.api.services.calendar.model.Event.Reminders reminders = new com.google.api.services.calendar.model.Event.Reminders()
+                .setUseDefault(false)
+                .setOverrides(Arrays.asList(reminderOverrides));
+        event.setReminders(reminders);
+
+        String calendarId = "primary";
+        event = service.events().insert(calendarId, event).execute();
+        System.out.printf("Event created: %s\n", event.getHtmlLink());
+
+
+
+
+        return "OK";
+    }
+
 }
+

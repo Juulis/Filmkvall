@@ -2,6 +2,7 @@ package com.app;
 
 import com.entities.Event;
 import com.entities.Movie;
+import com.entities.MovieFromOMDB;
 import com.entities.User;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -46,14 +47,13 @@ public class DatabaseController {
                 ul.clear();
                 for (DataSnapshot snap : snapshot.getChildren()) {
                     ul.add(snap.getValue(User.class));
-                    System.out.println(snap.getValue());
                 }
                 gotData[0] = true;
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
-                System.out.println("error in db");
+                System.out.println("error in db: " + error);
             }
         });
         while (!gotData[0]) {
@@ -66,13 +66,39 @@ public class DatabaseController {
         return ul;
     }
 
-    public Movie[] fetchMovies(String search) {
-        RestTemplate restTemplate = new RestTemplate();
-        String call = String.format("https://moviesociety-88142.firebaseio.com/search/%s.json", search);
-        Movie[] response = restTemplate.getForObject(call, Movie[].class);
-        if (response != null) {
-            return response;
+    public MovieFromOMDB fetchMovie(String id) {
+        DatabaseReference dbref = ref.child("movies").child(id);
+        final boolean[] gotData = {false};
+        final MovieFromOMDB[] movie = new MovieFromOMDB[1];
+        dbref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                movie[0] = snapshot.getValue(MovieFromOMDB.class);
+                gotData[0] = true;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                System.out.println("error in db: " + error );
+            }
+        });
+        while (!gotData[0]) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        return movie[0];
+    }
+
+    public Movie[] fetchMovies(String search) {
+//        RestTemplate restTemplate = new RestTemplate();
+//        String call = String.format("https://moviesociety-88142.firebaseio.com/search/%s.json", search);
+//        Movie[] response = restTemplate.getForObject(call, Movie[].class);
+//        if (response != null) {
+//            return response;
+//        }
         return null;
     }
 
@@ -92,7 +118,7 @@ public class DatabaseController {
         try {
 
             FileInputStream serviceAccount =
-                    new FileInputStream("E:\\Downloads\\moviesociety-88142-firebase-adminsdk-0cfn2-97d13ab429.json");
+                    new FileInputStream("src/moviesociety-88142-firebase-adminsdk-0cfn2-97d13ab429.json");
 
             FirebaseOptions options = new FirebaseOptions.Builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -106,6 +132,7 @@ public class DatabaseController {
         }
         database = FirebaseDatabase.getInstance();
         ref = database.getReference();
-
     }
+
+
 }
