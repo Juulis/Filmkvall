@@ -47,7 +47,7 @@ function signInCallback(authResult) {
 
 $('#searchmovie-btn').click(function () {
     $.ajax({
-        type: 'POST',
+        type: 'GET',
         url: `${URL}/api/movies?t=${$('#searchmovie-field').val()}`,
         // Always include an `X-Requested-With` header in every AJAX request,
         // to protect against CSRF attacks.
@@ -79,7 +79,7 @@ $('#searchmovie-btn').click(function () {
 
 function showMovie(imdbID) {
     $.ajax({
-        type: 'POST',
+        type: 'GET',
         url: `${URL}/api/movie?id=${imdbID}`,
         // Always include an `X-Requested-With` header in every AJAX request,
         // to protect against CSRF attacks.
