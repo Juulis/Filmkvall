@@ -2,6 +2,7 @@ package com.controller;
 
 import com.app.DatabaseController;
 import com.entities.Event;
+import com.entities.Movie;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -40,6 +41,7 @@ public class UserController {
     private byte[] salt = "petter".getBytes();
     private boolean loggedIn = false;
     private String URL = "http://juuffy.net:8080";
+    private Calendar calendar;
 
     public UserController() {
     }
@@ -131,16 +133,7 @@ public class UserController {
             e.printStackTrace();
         }
 
-        // Store these 3in your DB
         String accessToken = tokenResponse.getAccessToken();
-        String refreshToken = tokenResponse.getRefreshToken();
-        Long expiresAt = System.currentTimeMillis() + (tokenResponse.getExpiresInSeconds() * 1000);
-
-        // Debug purpose only
-        System.out.println("accessToken: " + accessToken);
-        System.out.println("refreshToken: " + refreshToken);
-        System.out.println("expiresAt: " + expiresAt);
-
 
         // Get profile info from ID token (Obtained at the last step of OAuth2)
         GoogleIdToken idToken = null;
@@ -151,54 +144,19 @@ public class UserController {
         }
         GoogleIdToken.Payload payload = idToken.getPayload();
 
-        // Use THIS ID as a key to identify a google user-account.
-        String userId = payload.getSubject();
-
         String email = payload.getEmail();
-        boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
         String name = (String) payload.get("name");
-        String pictureUrl = (String) payload.get("picture");
-        String locale = (String) payload.get("locale");
-        String familyName = (String) payload.get("family_name");
-        String givenName = (String) payload.get("given_name");
 
         User user = new User();
         user.setName(name);
         user.setMail(email);
 
-
-        // Debugging purposes, should probably be stored in the database instead (At least "givenName").
-        System.out.println("userId: " + userId);
-        System.out.println("email: " + email);
-        System.out.println("emailVerified: " + emailVerified);
-        System.out.println("name: " + name);
-        System.out.println("pictureUrl: " + pictureUrl);
-        System.out.println("locale: " + locale);
-        System.out.println("familyName: " + familyName);
-        System.out.println("givenName: " + givenName);
-
-
         // Use an accessToken previously gotten to call Google's API
         GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
-        Calendar calendar =
+        calendar =
                 new Calendar.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
                         .setApplicationName("Movie Nights")
                         .build();
-
-/*
-  List the next 10 events from the primary calendar.
-    Instead of printing these with System out, you should ofcourse store them in a database or in-memory variable to use for your application.
-{1}
-    The most important parts are:
-    event.getSummary()             // Title of calendar event
-    event.getStart().getDateTime() // Start-time of event
-    event.getEnd().getDateTime()   // Start-time of event
-    event.getStart().getDate()     // Start-date (without time) of event
-    event.getEnd().getDate()       // End-date (without time) of event
-{1}
-    For more methods and properties, see: Google Calendar Documentation.
-*/
-
 
         List<Event> eventsFromUser = new ArrayList<>();
 
@@ -235,8 +193,6 @@ public class UserController {
 
         adduser(name, "", email, eventsFromUser);
 
-        getAvailableHours();
-
         return "OK";
     }
 
@@ -264,8 +220,6 @@ public class UserController {
             }
         }
         return dates;
-
-
     }
 
     private boolean isViableTime(Event e) {
@@ -292,57 +246,46 @@ public class UserController {
         return dates;
     }
 
-//    @RequestMapping(value="/bookdate", method=POST)
-//    public String bookDate(@RequestBody String bookinginfo){
-//        // Refer to the Java quickstart on how to setup the environment:
-//// https://developers.google.com/calendar/quickstart/java
-//// Change the scope to CalendarScopes.CALENDAR and delete any stored
-//// credentials.
-//
-//        com.google.api.services.calendar.model.Event event = new com.google.api.services.calendar.model.Event()
-//                .setSummary("Google I/O 2015")
-//                .setLocation("800 Howard St., San Francisco, CA 94103")
-//                .setDescription("A chance to hear more about Google's developer products.");
-//
-//        DateTime startDateTime = new DateTime("2015-05-28T09:00:00-07:00");
-//        EventDateTime start = new EventDateTime()
-//                .setDateTime(startDateTime)
-//                .setTimeZone("America/Los_Angeles");
-//        event.setStart(start);
-//
-//        DateTime endDateTime = new DateTime("2015-05-28T17:00:00-07:00");
-//        EventDateTime end = new EventDateTime()
-//                .setDateTime(endDateTime)
-//                .setTimeZone("America/Los_Angeles");
-//        event.setEnd(end);
-//
-//        String[] recurrence = new String[] {"RRULE:FREQ=DAILY;COUNT=2"};
-//        event.setRecurrence(Arrays.asList(recurrence));
-//
-//        EventAttendee[] attendees = new EventAttendee[] {
-//                new EventAttendee().setEmail("lpage@example.com"),
-//                new EventAttendee().setEmail("sbrin@example.com"),
-//        };
-//        event.setAttendees(Arrays.asList(attendees));
-//
-//        EventReminder[] reminderOverrides = new EventReminder[] {
-//                new EventReminder().setMethod("email").setMinutes(24 * 60),
-//                new EventReminder().setMethod("popup").setMinutes(10),
-//        };
-//        com.google.api.services.calendar.model.Event.Reminders reminders = new com.google.api.services.calendar.model.Event.Reminders()
-//                .setUseDefault(false)
-//                .setOverrides(Arrays.asList(reminderOverrides));
-//        event.setReminders(reminders);
-//
-//        String calendarId = "primary";
-//        event = service.events().insert(calendarId, event).execute();
-//        System.out.printf("Event created: %s\n", event.getHtmlLink());
-//
-//
-//
-//
-//        return "OK";
-//    }
+    @RequestMapping(value = "/bookdate", method = POST)
+    public String bookDate(@RequestBody String bookinginfo) throws IOException {
+
+        String date = bookinginfo.split(",")[0].replace(",","");
+        String movieID = bookinginfo.split(",")[1];
+        OMDbController mc = new OMDbController();
+        Movie movie = mc.findMovieById(movieID);
+        String title = movie.getTitle();
+
+        com.google.api.services.calendar.model.Event event = new com.google.api.services.calendar.model.Event()
+                .setSummary("Filmkväll!")
+                .setLocation("I soffan!")
+                .setDescription("Vi ska se på "+title);
+
+        DateTime startDateTime = new DateTime(date+"T19:00:00+01:00");
+        EventDateTime start = new EventDateTime()
+                .setDateTime(startDateTime)
+                .setTimeZone("Europe/Stockholm");
+        event.setStart(start);
+
+        DateTime endDateTime = new DateTime(date+"T23:00:00+01:00");
+        EventDateTime end = new EventDateTime()
+                .setDateTime(endDateTime)
+                .setTimeZone("Europe/Stockholm");
+        event.setEnd(end);
+
+        List<User> users = DatabaseController.getInstance().fetchListOfUsers();
+        EventAttendee[] attendees = new EventAttendee[users.size()];
+        for (int i = 0; i < users.size(); i++) {
+           attendees[i] = new EventAttendee().setEmail(users.get(i).getMail());
+        }
+        event.setAttendees(Arrays.asList(attendees));
+
+        String calendarId = "primary";
+        event = calendar.events().insert(calendarId, event).execute();
+        System.out.printf("Event created: %s\n", event.getHtmlLink());
+
+
+        return "OK";
+    }
 
 }
 
