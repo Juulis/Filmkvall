@@ -25,8 +25,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -40,7 +38,7 @@ public class UserController {
     private static final String CLIENT_SECRET = "KNW7di1KWucBWP2xc7ZfJmsn";
     private byte[] salt = "petter".getBytes();
     private boolean loggedIn = false;
-    private String URL = "http://juuffy.net:8080";
+    private String URL = "http://localhost:8080";
     private Calendar calendar;
 
     public UserController() {

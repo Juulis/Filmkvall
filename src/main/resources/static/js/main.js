@@ -1,5 +1,5 @@
 const CLIENT_ID = "154954789740-8cn2jar3k6hj2726kla6bclqgnoo863s.apps.googleusercontent.com";
-const URL = "http://juuffy.net:8080";
+const URL = "http://localhost:8080";
 const content = $('#content');
 
 function start() {
