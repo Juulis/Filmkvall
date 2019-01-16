@@ -11,6 +11,9 @@ public class User {
     private String pw;
     private String mail = "noMail";
     private List<Event> events = Collections.emptyList();
+    private String refreshToken;
+    private long expirationtime;
+    private String accesstoken;
 
     public User() {
     }
@@ -32,6 +35,22 @@ public class User {
     @Override
     public String toString() {
         return String.format("%s,%s\n%s", name, mail, events.toString());
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public long getExpirationtime() {
+        return expirationtime;
+    }
+
+    public void setExpirationtime(long expirationtime) {
+        this.expirationtime = expirationtime;
     }
 
     public String getName() {
@@ -76,5 +95,13 @@ public class User {
 
     public void setEvents(List<Event> events) {
         this.events = events;
+    }
+
+    public String getAccesstoken() {
+        return accesstoken;
+    }
+
+    public void setAccesstoken(String accesstoken) {
+        this.accesstoken = accesstoken;
     }
 }

@@ -3,10 +3,7 @@ package com.controller;
 import com.app.DatabaseController;
 import com.entities.Event;
 import com.entities.Movie;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
@@ -44,9 +41,7 @@ public class UserController {
     public UserController() {
     }
 
-    @RequestMapping(value = "/adduser")
-    public User adduser(@RequestParam("name") String name, @RequestParam(value = "pw", defaultValue = "1337") String pw, @RequestParam(value = "mail") String mail, List<Event> events) {
-        User user = new User(name, null, createPw(pw), mail, events);
+    public User adduser(User user) {
         String dbPath = "users/" + user.getMail().replace(".", ",");
         DatabaseController.getInstance().sendToDb(user, dbPath);
         return user;
@@ -132,6 +127,8 @@ public class UserController {
         }
 
         String accessToken = tokenResponse.getAccessToken();
+        String refreshToken = tokenResponse.getRefreshToken();
+        long expiretime = tokenResponse.getExpiresInSeconds();
 
         // Get profile info from ID token (Obtained at the last step of OAuth2)
         GoogleIdToken idToken = null;
@@ -148,54 +145,88 @@ public class UserController {
         User user = new User();
         user.setName(name);
         user.setMail(email);
+        user.setAccesstoken(accessToken);
+        user.setExpirationtime(expiretime);
+        user.setRefreshToken(refreshToken);
 
-        // Use an accessToken previously gotten to call Google's API
-        GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
-        calendar =
-                new Calendar.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
-                        .setApplicationName("Movie Nights")
-                        .build();
 
-        List<Event> eventsFromUser = new ArrayList<>();
-
-        DateTime now = new DateTime(System.currentTimeMillis());
-        Events events = null;
-        try {
-            events = calendar.events().list("primary")
-                    .setMaxResults(20)
-                    .setTimeMin(now)
-                    .setOrderBy("startTime")
-                    .setSingleEvents(true)
-                    .execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        List<com.google.api.services.calendar.model.Event> items = events.getItems();
-        if (items.isEmpty()) {
-            System.out.println("No upcoming events found.");
-        } else {
-            System.out.println("Upcoming events");
-            for (com.google.api.services.calendar.model.Event event : items) {
-                DateTime start = event.getStart().getDateTime();
-                if (start == null) { // If it's an all-day-event - store the date instead
-                    start = event.getStart().getDate();
-                }
-                DateTime end = event.getEnd().getDateTime();
-                if (end == null) { // If it's an all-day-event - store the date instead
-                    end = event.getStart().getDate();
-                }
-//                System.out.printf("%s (%s) -> (%s)\n", event.getSummary(), start, end);
-                eventsFromUser.add(new Event(start + "," + end));
-            }
-        }
-
-        adduser(name, "", email, eventsFromUser);
+        adduser(user);
 
         return "OK";
     }
 
+    @RequestMapping(value = "/updatecal", method = POST)
+    public void updateCalendar(){
+        List<User> ul = DatabaseController.getInstance().fetchListOfUsers();
+
+        for(User user:ul) {
+            System.out.println(user.getMail());
+            GoogleCredential credential = getRefreshedCredentials(user.getRefreshToken());
+
+            // Use an accessToken previously gotten to call Google's API
+            calendar =
+                    new Calendar.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance(), credential)
+                            .setApplicationName("Movie Nights")
+                            .build();
+
+            List<Event> eventsFromUser = new ArrayList<>();
+
+            DateTime now = new DateTime(System.currentTimeMillis());
+            Events events = null;
+            try {
+                events = calendar.events().list("primary")
+                        .setMaxResults(20)
+                        .setTimeMin(now)
+                        .setOrderBy("startTime")
+                        .setSingleEvents(true)
+                        .execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            List<com.google.api.services.calendar.model.Event> items = events.getItems();
+            if (items.isEmpty()) {
+                System.out.println("No upcoming events found.");
+            } else {
+                System.out.println("Upcoming events");
+                for (com.google.api.services.calendar.model.Event event : items) {
+                    DateTime start = event.getStart().getDateTime();
+                    if (start == null) { // If it's an all-day-event - store the date instead
+                        start = event.getStart().getDate();
+                    }
+                    DateTime end = event.getEnd().getDateTime();
+                    if (end == null) { // If it's an all-day-event - store the date instead
+                        end = event.getStart().getDate();
+                    }
+//                System.out.printf("%s (%s) -> (%s)\n", event.getSummary(), start, end);
+                    eventsFromUser.add(new Event(start + "," + end));
+                }
+            }
+            user.setEvents(eventsFromUser);
+            adduser(user);
+        }
+    }
+
+    private GoogleCredential getRefreshedCredentials(String refreshCode) {
+        try {
+            GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+                    new NetHttpTransport(),
+                    JacksonFactory.getDefaultInstance(),
+                    refreshCode,
+                    CLIENT_ID,
+                    CLIENT_SECRET )
+                    .execute();
+
+            return new GoogleCredential().setAccessToken(response.getAccessToken());
+        }
+        catch( Exception ex ){
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
     @GetMapping("/getdates")
     public List<String> getAvailableHours() {
+        updateCalendar();
         List<User> ul = DatabaseController.getInstance().fetchListOfUsers();
         List<String> dates = makeDates();
         List<String> busyDates = new ArrayList<>();
